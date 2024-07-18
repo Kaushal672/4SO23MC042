@@ -13,11 +13,12 @@ exports.getNumbers = async (req, res) => {
     else if (id === 'e') url += 'even';
     else if (id === 'r') url += 'rand';
 
+    const token = await getToken();
+
     const response = await Promise.race([
         axios.get(url, {
             headers: {
-                Authorization:
-                    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJNYXBDbGFpbXMiOnsiZXhwIjoxNzIxMjk0ODc1LCJpYXQiOjE3MjEyOTQ1NzUsImlzcyI6IkFmZm9yZG1lZCIsImp0aSI6ImZlN2E0ZDY4LTMyODMtNDZmYi04OTQwLWU0MDhkYjFmZDVkNiIsInN1YiI6IjIzY2EwNDIua2F1c2hhbEBzamVjLmFjLmluIn0sImNvbXBhbnlOYW1lIjoiZ29NYXJ0IiwiY2xpZW50SUQiOiJmZTdhNGQ2OC0zMjgzLTQ2ZmItODk0MC1lNDA4ZGIxZmQ1ZDYiLCJjbGllbnRTZWNyZXQiOiJpcHVhcGNVUmNKRXl3dlJ5Iiwib3duZXJOYW1lIjoiS2F1c2hhbCBLIEJoYW5kYXJ5Iiwib3duZXJFbWFpbCI6IjIzY2EwNDIua2F1c2hhbEBzamVjLmFjLmluIiwicm9sbE5vIjoiNFNPMjNNQzA0MiJ9.GUfIL9ZJQg0BoQLrk0A9AuAL7NVAqugbvw1F5L6eJy0',
+                Authorization: 'Bearer ' + token,
             },
         }),
 
@@ -47,3 +48,16 @@ exports.getNumbers = async (req, res) => {
         avg,
     });
 };
+
+async function getToken() {
+    const res = await axios.post(BASE_TEST_URL + 'auth', {
+        companyName: 'goMart',
+        clientID: 'fe7a4d68-3283-46fb-8940-e408db1fd5d6',
+        clientSecret: 'ipuapcURcJEywvRy',
+        ownerName: 'Kaushal K Bhandary',
+        ownerEmail: '23ca042.kaushal@sjec.ac.in',
+        rollNo: '4SO23MC042',
+    });
+
+    return res.data.access_token;
+}

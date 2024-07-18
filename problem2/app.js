@@ -1,11 +1,11 @@
 const express = require('express');
-const numbersRoutes = require('./routes/numbers');
+const productRoutes = require('./routes/products');
 
 const app = express();
 
 app.use(express.json());
 
-app.use('/numbers', numbersRoutes);
+app.use('/categories', productRoutes);
 
 app.use((err, req, res, next) => {
     // console.log(err);
