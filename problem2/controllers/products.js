@@ -1,7 +1,8 @@
 const { v4 } = require('uuid');
 const axios = require('axios');
+const { URL } = require('url');
 
-const companies = ['AZO', 'AMZ', 'FLP', 'SNP', 'MYN'];
+const companies = ['AZO', 'AMZ'];
 const categories = [
     'Phone',
     'Computer',
@@ -19,31 +20,35 @@ const categories = [
     'Laptop',
     'PC',
 ];
+
 const BASE_TEST_URL = 'http://20.244.56.144/test/';
 
 exports.getProducts = async (req, res) => {
     const { categoryname } = req.params;
-    const { n, minprice, maxprice, ...sortBy } = req.query;
+    const { n, minprice, maxprice, page, sortBy, order } = req.query;
 
     const token = await getToken();
 
+    if (!categories.includes(categoryname))
+        return res.status(405).json({ message: 'Invalid category' });
+
     const requests = companies.map((item) => {
         let tempUrl = BASE_TEST_URL;
-        tempUrl += 'companies/';
-        tempUrl += item;
-        tempUrl += '/categories/';
-        tempUrl += categoryname;
-        tempUrl += '/products?top=' + n;
-        tempUrl += '&minPrice=' + minprice;
-        tempUrl += '&maxPrice=' + maxprice;
 
-        return axios.get(tempUrl, {
+        const url = new URL(BASE_TEST_URL);
+        url.pathname += `companies/${item}/categories/${categoryname}/products`;
+        url.searchParams.append('top', n);
+        url.searchParams.append('minPrice', minprice);
+        url.searchParams.append('maxPrice', maxprice);
+
+        return axios.get(url, {
             headers: { Authorization: 'Bearer ' + token },
         });
     });
 
     const responses = await Promise.all(requests);
-    const data = [];
+
+    let data = [];
 
     responses.forEach((item) =>
         item.data.forEach((p) => {
@@ -51,9 +56,24 @@ exports.getProducts = async (req, res) => {
         })
     );
 
-    data.sort((a, b) => a.price - b.price);
+    if (sortBy)
+        data.sort((a, b) => {
+            if (order === 'asc') return a[sortBy] - b[sortBy];
+            else return b[sortBy] - a[sortBy];
+        });
 
-    res.status(200).json({ data });
+    data.forEach((item) => generateUniqueId(item));
+    let pageProducts;
+    if (page) pageProducts = data.slice((page - 1) * 5, page * 5);
+    else {
+        return res.status(200).json({ products: data });
+    }
+
+    res.status(200).json({
+        products: pageProducts,
+        page,
+        totalPages: Math.floor(data.length / 5),
+    });
 };
 
 exports.getProduct = async (req, res) => {};
@@ -69,4 +89,8 @@ async function getToken() {
     });
 
     return res.data.access_token;
+}
+
+function generateUniqueId(obj) {
+    obj.id = v4();
 }

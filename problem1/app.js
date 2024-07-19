@@ -8,7 +8,7 @@ app.use(express.json());
 app.use('/numbers', numbersRoutes);
 
 app.use((err, req, res, next) => {
-    // console.log(err);
+    console.log(err.message);
 });
 
 app.listen(3000, () => {

@@ -13,36 +13,36 @@ exports.getNumbers = async (req, res) => {
     else if (id === 'e') url += 'even';
     else if (id === 'r') url += 'rand';
 
-    const token = await getToken();
+    // const token = await getToken();
 
-    const response = await Promise.race([
-        axios.get(url, {
-            headers: {
-                Authorization: 'Bearer ' + token,
-            },
-        }),
+    // const response = await Promise.race([
+    //     axios.get(url, {
+    //         headers: {
+    //             Authorization: 'Bearer ' + token,
+    //         },
+    //     }),
 
-        new Promise((resolve, reject) => {
-            setTimeout(() => {
-                reject(new Error('Timeout'));
-            }, 500);
-        }),
-    ]);
+    //     new Promise((resolve, reject) => {
+    //         setTimeout(() => {
+    //             reject(new Error('Timeout'));
+    //         }, 500);
+    //     }),
+    // ]);
 
     const prevState = list.getArray();
+    const data = generateRand();
 
-    if (response.status === 200) {
-        const data = [...new Set(response.data.numbers)];
-        data.forEach((item) => {
-            list.insert(item);
-        });
-    }
+    // if (response.status === 200) {
+    data.forEach((item) => {
+        list.insert(item);
+    });
+    // }
 
     const numbers = list.getArray();
     const avg = numbers.reduce((prev, cur) => prev + cur, 0) / numbers.length;
 
     res.status(200).json({
-        numbers: response.data.numbers,
+        numbers: data,
         windowPrevState: prevState,
         windowCurState: numbers,
         avg,
@@ -60,4 +60,13 @@ async function getToken() {
     });
 
     return res.data.access_token;
+}
+
+function generateRand() {
+    const res = Array.from(
+        { length: Math.floor(Math.random() * (10 - 5)) + 5 },
+        () => Math.floor(Math.random() * 10) + 1
+    );
+
+    return res;
 }
